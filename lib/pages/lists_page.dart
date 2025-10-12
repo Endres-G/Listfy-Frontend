@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/lists_controller.dart';
+import 'list_detalhes_page.dart' as detalhes;
 
 class ListsPage extends StatelessWidget {
   final ListController controller = Get.put(ListController());
@@ -10,10 +11,7 @@ class ListsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minhas Listas'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Minhas Listas'), centerTitle: true),
       body: Obx(() {
         if (controller.listas.isEmpty) {
           return const Center(
@@ -47,14 +45,33 @@ class ListsPage extends StatelessWidget {
                   children: [
                     Text('Criador: ${lista.criador}'),
                     Text(
-                        'Data: ${lista.dataCriacao.day}/${lista.dataCriacao.month}/${lista.dataCriacao.year}'),
+                      'Data: ${lista.dataCriacao.day}/${lista.dataCriacao.month}/${lista.dataCriacao.year}',
+                    ),
                     Text('Pendentes: ${lista.pendentes}'),
                   ],
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // Aqui você pode abrir detalhes da lista
-                  print('Abrir lista: ${lista.nome}');
+                  Get.to(
+                    () => detalhes.ListDetalhesPage(
+                      titulo: lista.nome,
+                      descricao: "Descrição da lista aqui",
+                      itens: [
+                        detalhes.ItemModelDetalhes(
+                          nome: "Leite",
+                          status: "pendentes",
+                        ),
+                        detalhes.ItemModelDetalhes(
+                          nome: "Ovos",
+                          status: "comprado",
+                        ),
+                        detalhes.ItemModelDetalhes(
+                          nome: "Pão",
+                          status: "atribuido",
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             );
