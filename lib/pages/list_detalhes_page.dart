@@ -1,108 +1,177 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-
-class ItemModelDetalhes {
-  final String nome;
-  final String status; // "pendentes", "atribuido", "comprado"
-
-  ItemModelDetalhes({required this.nome, required this.status});
-}
+import 'package:get/get.dart';
+import '../controllers/lists_controller.dart';
 
 class ListDetalhesPage extends StatefulWidget {
-  final String titulo;
-  final String descricao;
-  final List<ItemModelDetalhes> itens;
+  final int listaIndex;
 
-  const ListDetalhesPage({
-    super.key,
-    required this.titulo,
-    required this.descricao,
-    required this.itens,
-  });
+  const ListDetalhesPage({super.key, required this.listaIndex});
 
   @override
   State<ListDetalhesPage> createState() => _ListDetalhesPageState();
 }
 
 class _ListDetalhesPageState extends State<ListDetalhesPage> {
-  String filtro = "todos"; // pendentes, atribuidos, comprados, todos
+  final controller = Get.find<ListController>();
+
+  final nomeCtrl = TextEditingController();
+  final quantidadeCtrl = TextEditingController();
+  final unidadeCtrl = TextEditingController();
+  final atribuidoCtrl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    List<ItemModelDetalhes> itensFiltrados = widget.itens.where((item) {
-      if (filtro == "todos") return true;
-      return item.status == filtro;
-    }).toList();
+    final lista = controller.listas[widget.listaIndex];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.titulo),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              Share.share("${widget.titulo}\n${widget.descricao}");
-            },
-          ),
-        ],
+      appBar: AppBar(title: Text(lista.nome)),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _abrirDialogAdicionar(),
+        child: const Icon(Icons.add),
       ),
+
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(widget.descricao),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Text("Filtrar: "),
-                DropdownButton<String>(
-                  value: filtro,
-                  items: const [
-                    DropdownMenuItem(value: "todos", child: Text("Todos")),
-                    DropdownMenuItem(
-                      value: "pendentes",
-                      child: Text("Pendentes"),
-                    ),
-                    DropdownMenuItem(
-                      value: "atribuido",
-                      child: Text("Atribuídos"),
-                    ),
-                    DropdownMenuItem(
-                      value: "comprado",
-                      child: Text("Comprados"),
-                    ),
-                  ],
-                  onChanged: (valor) {
-                    setState(() {
-                      filtro = valor!;
-                    });
-                  },
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.all(16),
+            child: Text(lista.descricao),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: itensFiltrados.length,
-              itemBuilder: (context, index) {
-                final item = itensFiltrados[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: ListTile(
-                    title: Text(item.nome),
-                    subtitle: Text("Status: ${item.status}"),
-                  ),
-                );
-              },
-            ),
+            child: Obx(() {
+              final itens = lista.itens;
+
+              return ListView.builder(
+                itemCount: itens.length,
+                itemBuilder: (context, index) {
+                  final item = itens[index];
+
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        "${item.nome} (${item.quantidade} ${item.unidade})",
+                      ),
+                      subtitle: Text("Atribuído a: ${item.atribuidoA}"),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => _abrirDialogEditar(index, item),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () => controller.excluirItem(
+                              widget.listaIndex,
+                              index,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
           ),
         ],
       ),
+    );
+  }
+
+  // DIÁLOGO: ADICIONAR
+  void _abrirDialogAdicionar() {
+    nomeCtrl.clear();
+    quantidadeCtrl.clear();
+    unidadeCtrl.clear();
+    atribuidoCtrl.clear();
+
+    Get.defaultDialog(
+      title: "Adicionar Item",
+      content: Column(
+        children: [
+          TextField(
+            controller: nomeCtrl,
+            decoration: const InputDecoration(labelText: "Nome"),
+          ),
+          TextField(
+            controller: quantidadeCtrl,
+            decoration: const InputDecoration(labelText: "Quantidade"),
+            keyboardType: TextInputType.number,
+          ),
+          TextField(
+            controller: unidadeCtrl,
+            decoration: const InputDecoration(labelText: "Unidade"),
+          ),
+          TextField(
+            controller: atribuidoCtrl,
+            decoration: const InputDecoration(labelText: "Atribuído a"),
+          ),
+        ],
+      ),
+      onConfirm: () {
+        controller.adicionarItem(
+          widget.listaIndex,
+          ItemModel(
+            nome: nomeCtrl.text,
+            quantidade: int.tryParse(quantidadeCtrl.text) ?? 1,
+            unidade: unidadeCtrl.text,
+            atribuidoA: atribuidoCtrl.text,
+          ),
+        );
+        Get.back();
+      },
+      onCancel: () {},
+    );
+  }
+
+  // DIÁLOGO: EDITAR
+  void _abrirDialogEditar(int index, ItemModel item) {
+    nomeCtrl.text = item.nome;
+    quantidadeCtrl.text = item.quantidade.toString();
+    unidadeCtrl.text = item.unidade;
+    atribuidoCtrl.text = item.atribuidoA;
+
+    Get.defaultDialog(
+      title: "Editar Item",
+      content: Column(
+        children: [
+          TextField(
+            controller: nomeCtrl,
+            decoration: const InputDecoration(labelText: "Nome"),
+          ),
+          TextField(
+            controller: quantidadeCtrl,
+            decoration: const InputDecoration(labelText: "Quantidade"),
+          ),
+          TextField(
+            controller: unidadeCtrl,
+            decoration: const InputDecoration(labelText: "Unidade"),
+          ),
+          TextField(
+            controller: atribuidoCtrl,
+            decoration: const InputDecoration(labelText: "Atribuído a"),
+          ),
+        ],
+      ),
+      onConfirm: () {
+        controller.editarItem(
+          widget.listaIndex,
+          index,
+          ItemModel(
+            nome: nomeCtrl.text,
+            quantidade: int.tryParse(quantidadeCtrl.text) ?? 1,
+            unidade: unidadeCtrl.text,
+            atribuidoA: atribuidoCtrl.text,
+          ),
+        );
+        Get.back();
+      },
+      onCancel: () {},
     );
   }
 }

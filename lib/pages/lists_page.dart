@@ -52,26 +52,7 @@ class ListsPage extends StatelessWidget {
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  Get.to(
-                    () => detalhes.ListDetalhesPage(
-                      titulo: lista.nome,
-                      descricao: "Descrição da lista aqui",
-                      itens: [
-                        detalhes.ItemModelDetalhes(
-                          nome: "Leite",
-                          status: "pendentes",
-                        ),
-                        detalhes.ItemModelDetalhes(
-                          nome: "Ovos",
-                          status: "comprado",
-                        ),
-                        detalhes.ItemModelDetalhes(
-                          nome: "Pão",
-                          status: "atribuido",
-                        ),
-                      ],
-                    ),
-                  );
+                  Get.to(() => detalhes.ListDetalhesPage(listaIndex: index));
                 },
               ),
             );

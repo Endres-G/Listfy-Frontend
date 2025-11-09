@@ -1,14 +1,18 @@
-// lib/controllers/lists_controller.dart (atualizado)
+// lib/controllers/lists_controller.dart
 
 import 'package:get/get.dart';
 
 class ItemModel {
-  final String nome;
-  final String atribuidoA;
+  String nome;
+  int quantidade;
+  String unidade;
+  String atribuidoA;
   bool comprado;
 
   ItemModel({
     required this.nome,
+    required this.quantidade,
+    required this.unidade,
     required this.atribuidoA,
     this.comprado = false,
   });
@@ -20,7 +24,7 @@ class ListModel {
   final DateTime dataCriacao;
   final int pendentes;
   final String descricao;
-  final List<ItemModel> itens;
+  RxList<ItemModel> itens;
 
   ListModel({
     required this.nome,
@@ -28,8 +32,8 @@ class ListModel {
     required this.dataCriacao,
     required this.pendentes,
     required this.descricao,
-    required this.itens,
-  });
+    required List<ItemModel> itens,
+  }) : itens = RxList<ItemModel>(itens);
 }
 
 class ListController extends GetxController {
@@ -50,9 +54,25 @@ class ListController extends GetxController {
         pendentes: 3,
         descricao: "Lista de compras de supermercado da semana.",
         itens: [
-          ItemModel(nome: "Leite", atribuidoA: "Eduarda"),
-          ItemModel(nome: "Pão", atribuidoA: "João"),
-          ItemModel(nome: "Ovos", atribuidoA: "Maria", comprado: true),
+          ItemModel(
+            nome: "Leite",
+            quantidade: 1,
+            unidade: "L",
+            atribuidoA: "Eduarda",
+          ),
+          ItemModel(
+            nome: "Pão",
+            quantidade: 5,
+            unidade: "un",
+            atribuidoA: "João",
+          ),
+          ItemModel(
+            nome: "Ovos",
+            quantidade: 12,
+            unidade: "un",
+            atribuidoA: "Maria",
+            comprado: true,
+          ),
         ],
       ),
       ListModel(
@@ -62,11 +82,40 @@ class ListController extends GetxController {
         pendentes: 1,
         descricao: "Tarefas semanais do grupo.",
         itens: [
-          ItemModel(nome: "Relatório", atribuidoA: "Lucas"),
-          ItemModel(nome: "Apresentação", atribuidoA: "Ana", comprado: true),
+          ItemModel(
+            nome: "Relatório",
+            quantidade: 1,
+            unidade: "arquivo",
+            atribuidoA: "Lucas",
+          ),
+          ItemModel(
+            nome: "Apresentação",
+            quantidade: 1,
+            unidade: "slide",
+            atribuidoA: "Ana",
+            comprado: true,
+          ),
         ],
       ),
     ];
+  }
+
+  // ADICIONAR ITEM
+  void adicionarItem(int listaIndex, ItemModel item) {
+    listas[listaIndex].itens.add(item);
+    listas.refresh();
+  }
+
+  // EDITAR ITEM
+  void editarItem(int listaIndex, int itemIndex, ItemModel novoItem) {
+    listas[listaIndex].itens[itemIndex] = novoItem;
+    listas.refresh();
+  }
+
+  // EXCLUIR ITEM
+  void excluirItem(int listaIndex, int itemIndex) {
+    listas[listaIndex].itens.removeAt(itemIndex);
+    listas.refresh();
   }
 
   void criarNovaLista() {
